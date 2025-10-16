@@ -9,9 +9,10 @@
   },
   "author": "Alexander Vaca",
   "license": "ISC",
-  "description": "",
+  "description": "Proyecto del curso de NodeJS - GCBA - Talento Tech",
   "dependencies": {
-    "cowsay": "^1.6.0"
+    "node-fetch": "^3.3.2",
+    "yargs": "^18.0.0"
   },
   "devDependencies": {
     "nodemon": "^3.1.10"
