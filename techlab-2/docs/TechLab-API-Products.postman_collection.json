@@ -1,0 +1,651 @@
+{
+	"info": {
+		"_postman_id": "techlab-api-2024",
+		"name": "TechLab - API de Productos",
+		"description": "Colección completa de endpoints para la API de Productos TechLab.\n\nIncluye:\n- Autenticación con JWT\n- CRUD de productos\n- Manejo de errores\n\n**Instrucciones:**\n1. Importar esta colección en Postman\n2. Configurar las variables de entorno (baseUrl, token)\n3. Ejecutar primero el endpoint de Login\n4. El token se guardará automáticamente\n5. Los demás endpoints usarán el token automáticamente",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Auth",
+			"item": [
+				{
+					"name": "Login - Obtener Token JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"// Guardar el token automáticamente en variables de colección",
+									"if (pm.response.code === 200) {",
+									"    var jsonData = pm.response.json();",
+									"    if (jsonData.data && jsonData.data.token) {",
+									"        pm.collectionVariables.set(\"authToken\", jsonData.data.token);",
+									"        console.log(\"✅ Token guardado exitosamente\");",
+									"    }",
+									"}",
+									"",
+									"// Tests automáticos",
+									"pm.test(\"Status code es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Respuesta contiene token\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.have.property('token');",
+									"});",
+									"",
+									"pm.test(\"Success es true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"email\": \"admin@techlab.com\",\n    \"password\": \"admin123\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/auth/login",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"login"
+							]
+						},
+						"description": "Autentica un usuario y devuelve un Bearer token JWT.\n\n**Credenciales por defecto:**\n- Email: admin@techlab.com\n- Password: admin123\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"token\": \"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...\",\n    \"user\": {\n      \"email\": \"admin@techlab.com\",\n      \"role\": \"admin\"\n    }\n  },\n  \"message\": \"Autenticación exitosa\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Verificar Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Token es válido\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/auth/verify",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"auth",
+								"verify"
+							]
+						},
+						"description": "Verifica si el token JWT actual es válido.\n\n**Requiere:** Bearer Token en header Authorization\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"email\": \"admin@techlab.com\",\n    \"role\": \"admin\",\n    \"timestamp\": 1234567890\n  },\n  \"message\": \"Token válido\"\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints de autenticación y autorización"
+		},
+		{
+			"name": "Products",
+			"item": [
+				{
+					"name": "GET - Todos los Productos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Respuesta contiene array de productos\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.data).to.be.an('array');",
+									"});",
+									"",
+									"pm.test(\"Respuesta contiene count\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('count');",
+									"});",
+									"",
+									"// Guardar el primer ID de producto para otros endpoints",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.length > 0) {",
+									"    pm.collectionVariables.set(\"productId\", jsonData.data[0].id);",
+									"    console.log(\"✅ ID del primer producto guardado: \" + jsonData.data[0].id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						},
+						"description": "Obtiene todos los productos de la base de datos.\n\n**Requiere:** Bearer Token\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"data\": [\n    {\n      \"id\": \"abc123\",\n      \"title\": \"Laptop Dell XPS 13\",\n      \"price\": 1299.99,\n      \"description\": \"Laptop ultradelgada\",\n      \"category\": \"electronics\",\n      \"image\": \"https://...\",\n      \"rating\": {\n        \"rate\": 4.5,\n        \"count\": 120\n      }\n    }\n  ],\n  \"count\": 1\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "GET - Producto por ID",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 200 o 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Respuesta contiene producto\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData.data).to.have.property('id');",
+									"        pm.expect(jsonData.data).to.have.property('title');",
+									"        pm.expect(jsonData.data).to.have.property('price');",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{productId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{productId}}"
+							]
+						},
+						"description": "Obtiene un producto específico por su ID.\n\n**Requiere:** Bearer Token\n\n**Parámetros:**\n- `id`: ID del producto (en la URL)\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"abc123\",\n    \"title\": \"Laptop Dell XPS 13\",\n    \"price\": 1299.99,\n    \"description\": \"Laptop ultradelgada\",\n    \"category\": \"electronics\",\n    \"image\": \"https://...\",\n    \"rating\": {\n      \"rate\": 4.5,\n      \"count\": 120\n    }\n  }\n}\n```\n\n**Error (404):**\n```json\n{\n  \"error\": \"Recurso no encontrado\",\n  \"message\": \"Producto con ID abc123 no encontrado\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "POST - Crear Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 201\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Producto creado exitosamente\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.success).to.be.true;",
+									"    pm.expect(jsonData.data).to.have.property('id');",
+									"});",
+									"",
+									"// Guardar el ID del producto creado",
+									"var jsonData = pm.response.json();",
+									"if (jsonData.data && jsonData.data.id) {",
+									"    pm.collectionVariables.set(\"createdProductId\", jsonData.data.id);",
+									"    console.log(\"✅ ID del producto creado guardado: \" + jsonData.data.id);",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"iPhone 15 Pro\",\n    \"price\": 1099.99,\n    \"description\": \"Smartphone con chip A17 Pro y cámara de 48MP\",\n    \"category\": \"electronics\",\n    \"image\": \"https://images.unsplash.com/photo-1592286927505-2fd0677fc20e\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"create"
+							]
+						},
+						"description": "Crea un nuevo producto en la base de datos.\n\n**Requiere:** Bearer Token\n\n**Campos obligatorios:**\n- `title` (string): Nombre del producto\n- `price` (number): Precio (debe ser > 0)\n- `category` (string): Categoría del producto\n\n**Campos opcionales:**\n- `description` (string): Descripción\n- `image` (string): URL de la imagen\n\n**Respuesta exitosa (201):**\n```json\n{\n  \"success\": true,\n  \"data\": {\n    \"id\": \"xyz789\",\n    \"title\": \"iPhone 15 Pro\",\n    \"price\": 1099.99,\n    \"description\": \"Smartphone con chip A17 Pro\",\n    \"category\": \"electronics\",\n    \"image\": \"https://...\"\n  },\n  \"message\": \"Producto creado exitosamente\"\n}\n```\n\n**Error (400):**\n```json\n{\n  \"error\": \"Solicitud incorrecta\",\n  \"message\": \"Datos incompletos. Se requieren: title, price y category\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "DELETE - Eliminar Producto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 200 o 404\", function () {",
+									"    pm.expect(pm.response.code).to.be.oneOf([200, 404]);",
+									"});",
+									"",
+									"if (pm.response.code === 200) {",
+									"    pm.test(\"Producto eliminado exitosamente\", function () {",
+									"        var jsonData = pm.response.json();",
+									"        pm.expect(jsonData.success).to.be.true;",
+									"    });",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/{{createdProductId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"{{createdProductId}}"
+							]
+						},
+						"description": "Elimina un producto existente por su ID.\n\n**Requiere:** Bearer Token\n\n**Parámetros:**\n- `id`: ID del producto a eliminar (en la URL)\n\n**Respuesta exitosa (200):**\n```json\n{\n  \"success\": true,\n  \"message\": \"Producto con ID xyz789 eliminado exitosamente\"\n}\n```\n\n**Error (404):**\n```json\n{\n  \"error\": \"Recurso no encontrado\",\n  \"message\": \"Producto con ID xyz789 no encontrado\"\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Endpoints para gestión de productos (CRUD completo)"
+		},
+		{
+			"name": "Error Examples",
+			"item": [
+				{
+					"name": "Error 401 - Sin Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});",
+									"",
+									"pm.test(\"Mensaje de error apropiado\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('error');",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						},
+						"description": "Ejemplo de error 401: Intento de acceder a ruta protegida sin token.\n\n**Respuesta esperada (401):**\n```json\n{\n  \"error\": \"Acceso denegado\",\n  \"message\": \"No se proporcionó token de autenticación\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Error 401 - Token Inválido",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 401\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "token_invalido_123",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products"
+							]
+						},
+						"description": "Ejemplo de error 401: Token JWT inválido.\n\n**Respuesta esperada (401):**\n```json\n{\n  \"error\": \"Token inválido\",\n  \"message\": \"El token proporcionado no es válido\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Error 400 - Datos Incompletos",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 400\", function () {",
+									"    pm.response.to.have.status(400);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Producto Sin Precio\"\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/products/create",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"create"
+							]
+						},
+						"description": "Ejemplo de error 400: Intento de crear producto con datos incompletos.\n\n**Respuesta esperada (400):**\n```json\n{\n  \"error\": \"Solicitud incorrecta\",\n  \"message\": \"Datos incompletos. Se requieren: title, price y category\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Error 404 - Ruta No Existe",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ruta-que-no-existe",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ruta-que-no-existe"
+							]
+						},
+						"description": "Ejemplo de error 404: Ruta no definida en la API.\n\n**Respuesta esperada (404):**\n```json\n{\n  \"error\": \"Ruta no encontrada\",\n  \"message\": \"La ruta GET /api/ruta-que-no-existe no existe\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\"\n}\n```"
+					},
+					"response": []
+				},
+				{
+					"name": "Error 404 - Producto No Encontrado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code es 404\", function () {",
+									"    pm.response.to.have.status(404);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{authToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/products/id_inexistente_12345",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"products",
+								"id_inexistente_12345"
+							]
+						},
+						"description": "Ejemplo de error 404: Producto con ID inexistente.\n\n**Respuesta esperada (404):**\n```json\n{\n  \"error\": \"Recurso no encontrado\",\n  \"message\": \"Producto con ID id_inexistente_12345 no encontrado\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\"\n}\n```"
+					},
+					"response": []
+				}
+			],
+			"description": "Ejemplos de diferentes tipos de errores y respuestas HTTP"
+		},
+		{
+			"name": "Info API",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Status code es 200\", function () {",
+							"    pm.response.to.have.status(200);",
+							"});",
+							"",
+							"pm.test(\"Respuesta contiene información de la API\", function () {",
+							"    var jsonData = pm.response.json();",
+							"    pm.expect(jsonData).to.have.property('message');",
+							"    pm.expect(jsonData).to.have.property('endpoints');",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{baseUrl}}/",
+					"host": [
+						"{{baseUrl}}"
+					],
+					"path": [
+						""
+					]
+				},
+				"description": "Endpoint raíz que devuelve información general de la API.\n\n**No requiere autenticación**\n\n**Respuesta (200):**\n```json\n{\n  \"message\": \"🚀 API de Productos - TechLab\",\n  \"version\": \"1.0.0\",\n  \"endpoints\": {\n    \"auth\": {\n      \"login\": \"POST /auth/login\",\n      \"verify\": \"GET /auth/verify\"\n    },\n    \"products\": {\n      \"getAll\": \"GET /api/products\",\n      \"getById\": \"GET /api/products/:id\",\n      \"create\": \"POST /api/products/create\",\n      \"delete\": \"DELETE /api/products/:id\"\n    }\n  }\n}\n```"
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:3000",
+			"type": "string"
+		},
+		{
+			"key": "authToken",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "productId",
+			"value": "",
+			"type": "string"
+		},
+		{
+			"key": "createdProductId",
+			"value": "",
+			"type": "string"
+		}
+	]
+}
+

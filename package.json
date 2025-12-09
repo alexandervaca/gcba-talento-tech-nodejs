@@ -11,6 +11,7 @@
   "license": "ISC",
   "description": "Proyecto del curso de NodeJS - GCBA - Talento Tech",
   "dependencies": {
+    "http-server": "^14.1.1",
     "node-fetch": "^3.3.2",
     "yargs": "^18.0.0"
   },
