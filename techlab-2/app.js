@@ -9,6 +9,10 @@ import authRoutes from './src/route/auth.routes.js';
 // Importar middlewares
 import { notFoundHandler, errorHandler } from './src/middleware/error.middleware.js';
 
+import swaggerUi from 'swagger-ui-express';
+import swaggerSpec from './src/config/swagger.config.js';
+
+
 // Crear aplicación Express
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +48,10 @@ app.get('/', (req, res) => {
   res.json({
     message: '🚀 API de Productos - TechLab',
     version: '1.0.0',
+    documentation: {
+      swagger: `http://localhost:${PORT}/api-docs`,
+      description: 'Documentación interactiva de la API'
+    },
     endpoints: {
       auth: {
         login: 'POST /auth/login',
@@ -61,6 +69,17 @@ app.get('/', (req, res) => {
 });
 
 // ============================================
+// SWAGGER-UI - Documentación de la API
+// IMPORTANTE: Debe estar ANTES del notFoundHandler
+// ============================================
+
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'TechLab API Documentation',
+  customfavIcon: '/favicon.ico'
+}));
+
+// ============================================
 // RUTAS DE LA API
 // ============================================
 
@@ -75,10 +94,14 @@ app.use('/api/products', productsRoutes);
 // ============================================
 
 // Middleware para rutas no encontradas (404)
+// IMPORTANTE: Debe estar al final, después de todas las rutas
 app.use(notFoundHandler);
 
 // Middleware global de manejo de errores
 app.use(errorHandler);
+
+// ============================================
+
 
 // ============================================
 // INICIAR SERVIDOR
@@ -93,6 +116,7 @@ app.listen(PORT, () => {
   console.log(`   → http://localhost:${PORT}/`);
   console.log(`   → http://localhost:${PORT}/auth/login`);
   console.log(`   → http://localhost:${PORT}/api/products`);
+  console.log(`   → http://localhost:${PORT}/api-docs (Swagger UI)`);
   console.log('');
   console.log('⚠️  Recuerda configurar el archivo .env antes de usar Firebase');
   console.log('');

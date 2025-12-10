@@ -1,5 +1,7 @@
 # 🔥 Guía Rápida: Configuración de Firebase
 
+https://console.firebase.google.com/u/0/project/techlab-products/overview
+
 ## Paso 1: Crear Proyecto en Firebase
 
 1. Ve a [Firebase Console](https://console.firebase.google.com/)
